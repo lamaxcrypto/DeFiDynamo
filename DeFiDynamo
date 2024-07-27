@@ -1,0 +1,78 @@
+import requests
+import pandas as pd
+import matplotlib.pyplot as plt
+from datetime import datetime
+
+class DeFiDynamo:
+    def __init__(self, coingecko_api_url: str = 'https://api.coingecko.com/api/v3'):
+        self.coingecko_api_url = coingecko_api_url
+
+    # CoinGecko methods
+    def get_token_details(self, token_id: str) -> dict:
+        url = f"{self.coingecko_api_url}/coins/{token_id}"
+        response = requests.get(url)
+        if response.status_code == 200:
+            return response.json()
+        else:
+            return {"error": "Token not found"}
+
+    def get_price_data(self, token_id: str, vs_currency: str = 'usd', days: int = 30) -> pd.DataFrame:
+        url = f"{self.coingecko_api_url}/coins/{token_id}/market_chart?vs_currency={vs_currency}&days={days}"
+        response = requests.get(url)
+        data = response.json()
+
+        prices = data['prices']
+        df = pd.DataFrame(prices, columns=['timestamp', 'price'])
+        df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms')
+        return df
+
+    def plot_price_data(self, token_id: str, vs_currency: str = 'usd', days: int = 30):
+        df = self.get_price_data(token_id, vs_currency, days)
+        plt.figure(figsize=(12, 6))
+        plt.plot(df['timestamp'], df['price'])
+        plt.title(f'{token_id.capitalize()} Price over the last {days} days')
+        plt.xlabel('Date')
+        plt.ylabel(f'Price ({vs_currency.upper()})')
+        plt.grid(True)
+        plt.show()
+
+    # Hypothetical methods for DeFi protocol data
+    def get_defi_protocol_data(self, protocol_name: str) -> dict:
+        # Placeholder URL for DeFi protocol data
+        # Replace with actual API endpoint or method
+        url = f"https://api.example.com/defi/{protocol_name}/data"
+        response = requests.get(url)
+        if response.status_code == 200:
+            return response.json()
+        else:
+            return {"error": "DeFi protocol not found"}
+
+    def analyze_defi_protocol_performance(self, protocol_name: str):
+        data = self.get_defi_protocol_data(protocol_name)
+        if 'error' in data:
+            print(data['error'])
+            return
+        
+        # Placeholder for performance metrics
+        # Modify based on actual data structure and metrics
+        metrics = {
+            'Total Value Locked (TVL)': data.get('tvl', 0),
+            'Total Transactions': data.get('total_transactions', 0),
+            'Average APY': data.get('average_apy', 0)
+        }
+        
+        # Print or return metrics
+        for key, value in metrics.items():
+            print(f"{key}: {value}")
+
+# Example Usage
+if __name__ == "__main__":
+    defi_dynamo = DeFiDynamo()
+
+    # Fetch and Plot Price Data for a Token
+    token_id = 'uniswap'
+    defi_dynamo.plot_price_data(token_id, days=30)
+
+    # Analyze DeFi Protocol Performance
+    protocol_name = 'uniswap'
+    defi_dynamo.analyze_defi_protocol_performance(protocol_name)
